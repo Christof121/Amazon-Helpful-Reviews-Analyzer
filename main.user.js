@@ -71,17 +71,19 @@ async function processAndShowContent() {
 
                 let shortText = text.slice(0, 200) + (text.length > 200 ? '...' : '');
 
-                if(rating > 0){
-
+                if(helpfulVotes > 0){
+                    var star = "⭐";
                     let index = "";
 
                     let outputHTML = '';
-                    outputHTML += `<div class="item-style"> ❤️${helpfulVotes} ${rating} <a href="${link}" target="_blank">${title}</a><br>
+                    outputHTML += `<div class="item-style"> ❤️${helpfulVotes} ${star.repeat(rating)} <a href="${link}" target="_blank">${title}</a><br>
         <span id="shortText${index}">${shortText}</span>
         <span id="fullText${index}" style="display: none;">${text}</span>
         <button id="expandText${index}" style="border:none; background:none; color:#007185; cursor:pointer;">[ + ]</button>
         </div>`;
-                    outputDiv.appendChild = outputHTML;
+                    var container = document.createElement("div");
+                    container.innerHTML = outputHTML;
+                    outputDiv.appendChild(container);
                 }
             });
         } else {
