@@ -9,6 +9,9 @@
 // @grant        none
 // ==/UserScript==
 
+var debug = false;
+var reviewData = [];
+
 //window.addEventListener("DOMContentLoaded", insertButton);
 setTimeout(insertButton, 1000);
 
@@ -17,6 +20,10 @@ function insertButton() {
     button.textContent = 'Find Helpful Reviews';
     button.setAttribute('id', 'insertButton');
     button.classList.add('your-content-widget-tab-btn');
+
+    const exportButton = document.createElement('button');
+    exportButton.textContent = 'Export to CSV';
+    exportButton.classList.add('your-content-widget-tab-btn');
 
     var apiButtonContainer = document.createElement('div');
     apiButtonContainer.classList.add('ahra-toggle-container');
@@ -46,11 +53,15 @@ function insertButton() {
     if (container) {
         container.appendChild(apiButtonContainer);
         container.appendChild(button);
+        container.appendChild(exportButton);
         //button.addEventListener('click', processAndShowContent);
         button.addEventListener('click', function(element) {
             button.style.cursor = "not-allowed";
             button.disabled = true;
             processAndShowContent();
+        });
+        exportButton.addEventListener('click', function(element) {
+            exportToCSV();
         });
     }
 }
@@ -77,15 +88,18 @@ async function processAndShowContent() {
         let nextPageToken = ""; // Setze hier den initialen nextPageToken-Wert, beim ersten aufruf leer
         let run = true; // Setzte run auf true, um die Schleife zu starten
         var index = 0;
+
+        var idCount = 0;
+
         while (nextPageToken || run) {
             run = false; // Run zurücksetzten
             // Erstelle die URL mit dem aktuellen nextPageToken
             const url = `https://www.amazon.de/profilewidget/timeline/owner?nextPageToken=${encodeURIComponent(nextPageToken)}&filteredContributionTypes=productreview&pageSize=16&token=${encodeURIComponent(token)}`; //pageSize= keine verwendeung??
-            console.log(url);
+            if(debug){console.log(url)};
 
             // Rufe die API auf
             const response = await fetch(url);
-            console.log(response);
+            if(debug){console.log(response)};
 
             // Überprüfe, ob die Anfrage erfolgreich war
             if (response.ok) {
@@ -98,19 +112,59 @@ async function processAndShowContent() {
                 const contributions = data.contributions;
                 contributions.forEach((contribution) => {
                     // Hier kannst du die Bewertungsdaten verarbeiten
-                    console.log(contribution);
+                    if(debug){console.log(contribution)};
+                    // Produkt
+                    let asin = contribution.product.asin;
                     let productTitle = contribution.product.title;
-                    let title = contribution.title;
-                    let image = contribution.product.image;
-                    let rating = contribution.rating;
-                    let helpfulVotes = contribution.helpfulVotes;
-                    let text = contribution.text;
+                    let prodcutImage = contribution.product.image;
+                    let productLink = contribution.product.link;
+                    let productreviewCount = contribution.product.reviewCount;
+                    let productAverageRating = contribution.product.averageRating;
+                    let productFullStarCount = contribution.product.fullStarCount;
+                    let productisPrime = contribution.product.prime;
+
+                    //Review
+                    let reviewId = contribution.id;
                     let externalId = contribution.externalId;
-                    let link = "/gp/customer-reviews/" + externalId + "?ref=pf_ov_at_pdctrvw_srp"
+                    let reviewTimestamp = contribution.sortTimestamp;
+                    let reviewRating = contribution.rating;
+                    let reviewVisibility = contribution.visibility;
+                    let reviesHelpfulVotes = contribution.helpfulVotes;
+                    let reviewTitle = contribution.title;
+                    let reviewText = contribution.text;
+                    let reviewShortText = reviewText.slice(0, 200) + (reviewText.length > 200 ? '...' : '');
+                    let reviewImages = contribution.images;
+                    let isverifiedPurchase = contribution.verifiedPurchase;
+                    let isVine = contribution.vine;
+                    let zebra = contribution.zebra;
+                    let reviewLink = "/gp/customer-reviews/" + externalId + "?ref=pf_ov_at_pdctrvw_srp"
 
-                    let shortText = text.slice(0, 200) + (text.length > 200 ? '...' : '');
+                    reviewData.push({
+                        asin: asin,
+                        productTitle: productTitle,
+                        prodcutImage: prodcutImage,
+                        productLink: productLink,
+                        productreviewCount: productreviewCount,
+                        productAverageRating: productAverageRating,
+                        productFullStarCount: productFullStarCount,
+                        productisPrime: productisPrime,
+                        reviewId: reviewId,
+                        externalId: externalId,
+                        reviewTimestamp: reviewTimestamp,
+                        reviewRating: reviewRating,
+                        reviewVisibility: reviewVisibility,
+                        reviesHelpfulVotes: reviesHelpfulVotes,
+                        reviewTitle: reviewTitle,
+                        reviewText: reviewText,
+                        reviewShortText: reviewShortText,
+                        reviewImages: reviewImages,
+                        isverifiedPurchase: isverifiedPurchase,
+                        isVine: isVine,
+                        zebra: zebra,
+                        reviewLink: reviewLink
+                    });
 
-                    if(helpfulVotes > 0){
+                    if(reviesHelpfulVotes > 0){
                         var star = "⭐";
                         var noStar = "▫️"
 
@@ -120,25 +174,25 @@ async function processAndShowContent() {
                         imageContainer.style.height = '32px';
                         imageContainer.style.width = '32px';
                         imageContainer.style.objectFit = 'contain';
-                        imageContainer.src = image;
+                        imageContainer.src = prodcutImage;
 
                         var containerInner = document.createElement("div");
                         containerInner.classList.add('item-style');
-                        containerInner.textContent = " ❤️" + helpfulVotes + " " + star.repeat(rating) + "" + noStar.repeat(5 - rating) + " ";
+                        containerInner.textContent = " ❤️" + reviesHelpfulVotes + " " + star.repeat(reviewRating) + "" + noStar.repeat(5 - reviewRating) + " ";
 
                         var linkElement = document.createElement("a");
-                        linkElement.href = link;
+                        linkElement.href = reviewLink;
                         linkElement.target = "_blank";
-                        linkElement.textContent = title;
+                        linkElement.textContent = reviewTitle;
 
                         var shortSpan = document.createElement("span");
                         shortSpan.setAttribute('id', 'shortText' + index);
-                        shortSpan.innerHTML = shortText;
+                        shortSpan.innerHTML = reviewShortText;
 
                         var longSpan = document.createElement("span");
                         longSpan.setAttribute('id', 'fullText' + index);
                         longSpan.style.display = "none";
-                        longSpan.innerHTML = text;
+                        longSpan.innerHTML = reviewText;
 
                         var button = document.createElement("button");
                         button.setAttribute('id', 'expandText' + index);
@@ -167,6 +221,7 @@ async function processAndShowContent() {
                         outputDiv.appendChild(container);
 
                     }
+                    idCount++;
                 });
             } else {
                 console.error('Fehler beim Abrufen der Daten');
@@ -178,7 +233,7 @@ async function processAndShowContent() {
             await new Promise(resolve => setTimeout(resolve, 1000));
             index++;
         }
-
+        if(debug){console.log(reviewData)};
     }else{
 
         const wrappers = Array.from(document.querySelectorAll('.your-content-card-wrapper'));
@@ -248,6 +303,77 @@ async function processAndShowContent() {
                 expandButton.addEventListener('click', () => toggleText(index));
             }
         });
+    }
+}
+
+async function exportToCSV() {
+    var checkBox = document.querySelector('#apiToggleSwitch');
+    if(checkBox.checked){
+
+        if(reviewData.length != 0){
+            downloadCSV(reviewData, 'output.csv');
+        }else{
+            await processAndShowContent();
+            downloadCSV(reviewData, 'output.csv');
+        }
+
+        function convertToCSV(data) {
+            const headers = Object.keys(data[0]);
+            const headerRow = headers.join(';') + '\n';
+
+            const csvRows = data.map(row => {
+                return headers.map(header => `"${row[header]}"`).join(';');
+            });
+
+            return '\uFEFF' + headerRow + csvRows.join('\n'); // Prefix mit BOM-Zeichen
+        }
+
+        function downloadCSV(data, filename) {
+            const csv = convertToCSV(data);
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = filename;
+
+            document.body.appendChild(link);
+            link.click();
+
+            document.body.removeChild(link);
+        }
+    }else{
+        const wrappers = Array.from(document.querySelectorAll('.your-content-card-wrapper'));
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Count,Star Rating,Title,Link,Text\n"; // CSV Header
+
+        wrappers.forEach(wrapper => {
+            const count = parseInt(wrapper.querySelector('.your-content-card-reactions span')?.textContent || '0');
+            if (count > -1) { // Set to 0 to export only helpful reviews and to -1 to export all reviews
+                const starRating = getStarRating(wrapper);
+                const linkElement = wrapper.querySelector('a[href*="/gp/customer-reviews/"]');
+                const link = linkElement ? "https://www.amazon.de" + linkElement.getAttribute('href').split('?')[0] : '';
+                const title = wrapper.querySelector('.your-content-title')?.textContent || 'No Title';
+
+                // Use innerHTML to get the content with HTML tags
+                const htmlContent = wrapper.querySelector('.your-content-text-3')?.innerHTML || 'No Text';
+
+                // Replace <br> tags with \n and remove any other HTML tags
+                const cleanedText = htmlContent.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]*>/g, '');
+
+                // Enclose fields in quotes and escape existing quotes
+                csvContent += `"${count}","${starRating}","${title.replace(/"/g, '""')}","${link}","${cleanedText.replace(/"/g, '""')}"\n`; // Add data row
+            }
+        });
+
+        // Create a link and download the CSV file
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+        link.setAttribute('download', 'AHRA-Export.csv');
+        document.body.appendChild(link); // Required for FF
+
+        link.click(); // Start download
+        document.body.removeChild(link); // Clean up
     }
 }
 
