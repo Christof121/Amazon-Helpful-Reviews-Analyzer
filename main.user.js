@@ -9,7 +9,7 @@
 // @grant        none
 // ==/UserScript==
 
-var debug = false;
+var debug = true;
 var reviewData = [];
 
 //window.addEventListener("DOMContentLoaded", insertButton);
@@ -137,13 +137,13 @@ async function processAndShowContent() {
                     let isverifiedPurchase = contribution.verifiedPurchase;
                     let isVine = contribution.vine;
                     let zebra = contribution.zebra;
-                    let reviewLink = "/gp/customer-reviews/" + externalId + "?ref=pf_ov_at_pdctrvw_srp"
+                    let reviewLink = "/gp/customer-reviews/" + externalId
 
                     reviewData.push({
                         asin: asin,
                         productTitle: productTitle,
                         prodcutImage: prodcutImage,
-                        productLink: productLink,
+                        productLink: "https://www.amazon.de" + productLink,
                         productreviewCount: productreviewCount,
                         productAverageRating: productAverageRating,
                         productFullStarCount: productFullStarCount,
@@ -161,7 +161,7 @@ async function processAndShowContent() {
                         isverifiedPurchase: isverifiedPurchase,
                         isVine: isVine,
                         zebra: zebra,
-                        reviewLink: reviewLink
+                        reviewLink: "https://www.amazon.de" + reviewLink
                     });
 
                     if(reviesHelpfulVotes > 0){
