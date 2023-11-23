@@ -9,16 +9,42 @@
 // @grant        none
 // ==/UserScript==
 
-let useAPI = false;
+//window.addEventListener("DOMContentLoaded", insertButton);
+setTimeout(insertButton, 1000);
 
 function insertButton() {
     const button = document.createElement('button');
     button.textContent = 'Find Helpful Reviews';
-    button.style.marginLeft = '10px';
     button.setAttribute('id', 'insertButton');
+    button.classList.add('your-content-widget-tab-btn');
+
+    var apiButtonContainer = document.createElement('div');
+    apiButtonContainer.classList.add('ahra-toggle-container');
+
+    var apiButtonLabel = document.createElement('label');
+    apiButtonLabel.textContent = "Use API";
+    apiButtonLabel.classList.add('ahra-toggle-label');
+
+    var apiSwitchLabel = document.createElement('label');
+    apiSwitchLabel.classList.add('ahra-toggle-switch');
+
+    var apiSwitchInput = document.createElement('input');
+    apiSwitchInput.type = "checkbox";
+    apiSwitchInput.setAttribute("id", "apiToggleSwitch");
+    apiSwitchInput.classList.add('ahra-input');
+
+    var apiSwitchSpan = document.createElement('span');
+    apiSwitchSpan.classList.add('ahra-toggle-slider');
+
+    apiSwitchLabel.appendChild(apiSwitchInput);
+    apiSwitchLabel.appendChild(apiSwitchSpan);
+
+    apiButtonContainer.appendChild(apiButtonLabel);
+    apiButtonContainer.appendChild(apiSwitchLabel);
 
     const container = document.querySelector('.your-content-widget-tab-buttons');
     if (container) {
+        container.appendChild(apiButtonContainer);
         container.appendChild(button);
         //button.addEventListener('click', processAndShowContent);
         button.addEventListener('click', function(element) {
@@ -30,6 +56,8 @@ function insertButton() {
 }
 
 async function processAndShowContent() {
+
+    var checkBox = document.querySelector('#apiToggleSwitch');
 
     // Output Div erzeugen
     let outputDiv = document.getElementById('outputDiv');
@@ -44,7 +72,7 @@ async function processAndShowContent() {
         }
     }
 
-    if(useAPI){
+    if(checkBox.checked){
 
         let nextPageToken = ""; // Setze hier den initialen nextPageToken-Wert, beim ersten aufruf leer
         let run = true; // Setzte run auf true, um die Schleife zu starten
@@ -258,10 +286,62 @@ style.textContent = `
     margin-bottom: 10px;
     background-color: #f8f8f8;
   }
+
+  .ahra-toggle-container {
+      display: flex;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .ahra-toggle-label {
+      line-height: 14px;
+    }
+
+    .ahra-toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 30px;
+      height: 17px;
+    }
+
+    .ahra-toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: 0.4s;
+      border-radius: 34px;
+    }
+
+    .ahra-toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 13px;
+      width: 13px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: 0.4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .ahra-toggle-slider {
+      background-color: #2196F3;
+    }
+
+    input:checked + .ahra-toggle-slider:before {
+      transform: translateX(13px);
+    }
+
+    .ahra-input {
+      display: none;
+    }
 `;
 document.head.appendChild(style);
 
-setTimeout(insertButton, 2000);
 
 // Greife auf das CustomerProfileRootProps-Objekt zu
 var customerProfileRootProps = window.CustomerProfileRootProps;
