@@ -1,4 +1,4 @@
 # Amazon-Helpful-Reviews-Analyzer
-by DicoJay
+by DiscoJay
 
 https://www.amazon.de/gp/profile/
